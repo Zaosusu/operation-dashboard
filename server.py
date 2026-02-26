@@ -11,8 +11,9 @@ import json
 import sqlite3
 import hashlib
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from functools import wraps
-from flask import Flask, jsonify, request, send_from_directory, redirect, session,send_file
+from flask import Flask, jsonify, request, send_from_directory, redirect, session, send_file
 from flask_cors import CORS
 import shutil 
 
@@ -24,6 +25,13 @@ CORS(app)
 DB_PATH = os.environ.get('DB_PATH', os.path.join(os.path.dirname(__file__), 'data', 'operations.db'))
 STATIC_PATH = os.path.dirname(__file__)
 ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', hashlib.sha256('admin123'.encode()).hexdigest())
+
+# 时区配置：北京时间 UTC+8
+BEIJING_OFFSET = timedelta(hours=8)
+
+def now():
+    """获取当前北京时间（无论服务器/本地时区如何，都正确）"""
+    return datetime.now(ZoneInfo("Asia/Shanghai"))
 
 # 默认任务模板 - 首次运行时导入数据库（之后可编辑）
 DEFAULT_TASKS = [
@@ -236,7 +244,7 @@ def get_task_templates(weekday=None):
 def generate_daily_tasks(date_str=None):
     """生成指定日期的任务列表"""
     if date_str is None:
-        date_str = datetime.now().strftime('%Y-%m-%d')
+        date_str = now().strftime('%Y-%m-%d')
     
     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
     weekday = date_obj.weekday()
@@ -390,8 +398,8 @@ def get_streak_info():
     max_streak = record['max_streak']
     last_check = record['last_check_date']
     
-    today = datetime.now().strftime('%Y-%m-%d')
-    yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    today = now().strftime('%Y-%m-%d')
+    yesterday = (now() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     if last_check == today or last_check == yesterday:
         conn.close()
@@ -444,7 +452,7 @@ def get_week_stats():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    today = datetime.now()
+    today = now()
     week_data = []
     
     for i in range(7):
@@ -685,7 +693,7 @@ def admin_login_page():
 @app.route('/api/today')
 def get_today():
     """获取今日任务列表+状态"""
-    date_str = datetime.now().strftime('%Y-%m-%d')
+    date_str = now().strftime('%Y-%m-%d')
     tasks, day_type = generate_daily_tasks(date_str)
     stats = update_daily_stats(date_str, day_type)
     streak = get_streak_info()
@@ -699,7 +707,7 @@ def get_today():
     
     return jsonify({
         "date": date_str,
-        "weekday": datetime.now().weekday(),
+        "weekday": now().weekday(),
         "dayType": day_type,
         "mainTasks": main_tasks,
         "optionalTasks": optional_tasks,
@@ -715,7 +723,7 @@ def get_today():
 @app.route('/api/task/<int:task_id>', methods=['POST'])
 def toggle_task(task_id):
     """切换任务完成状态"""
-    date_str = datetime.now().strftime('%Y-%m-%d')
+    date_str = now().strftime('%Y-%m-%d')
     data = request.get_json() or {}
     new_completed = data.get('completed', True)
     
@@ -736,14 +744,14 @@ def toggle_task(task_id):
     old_completed = bool(row['completed'])
     
     # 更新任务状态
-    completed_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S') if new_completed else None
+    completed_at = now().strftime('%Y-%m-%d %H:%M:%S') if new_completed else None
     cursor.execute('''
         UPDATE tasks SET completed = ?, completed_at = ? WHERE date = ? AND id = ?
     ''', (1 if new_completed else 0, completed_at, date_str, task_id))
     conn.commit()
     conn.close()
     
-    weekday = datetime.now().weekday()
+    weekday = now().weekday()
     day_type = DAY_TYPES.get(weekday, "学习日")
     
     # 更新每日统计
@@ -768,7 +776,7 @@ def toggle_task(task_id):
         "success": True,
         "taskId": task_id,
         "completed": new_completed,
-        "completedAt": datetime.now().strftime('%H:%M') if new_completed else None,
+        "completedAt": now().strftime('%H:%M') if new_completed else None,
         "stats": stats,
         "newAchievements": new_achievements
     })
@@ -813,7 +821,7 @@ def export_data():
     conn.close()
     
     return jsonify({
-        "exportTime": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "exportTime": now().strftime('%Y-%m-%d %H:%M:%S'),
         "tasks": tasks,
         "dailyStats": stats,
         "streak": streak,
@@ -1035,7 +1043,7 @@ def update_task_template(template_id):
     conn.close()
     
     # 更新今日及未来的任务实例名称
-    today = datetime.now().strftime('%Y-%m-%d')
+    today = now().strftime('%Y-%m-%d')
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -1076,7 +1084,7 @@ def delete_task_template(template_id):
             return jsonify({"success": False, "error": "任务不存在"}), 404
         
         # 删除今日及未来的任务实例（先删实例，再删模板）
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = now().strftime('%Y-%m-%d')
         cursor.execute('DELETE FROM tasks WHERE template_id = ? AND date >= ?', (template_id, today))
         
         # 删除任务模板
@@ -1120,8 +1128,7 @@ def import_db():
         return jsonify({'success': False, 'error': '必须是 .db 文件'}), 400
     
     # 备份原数据库
-    import shutil
-    backup_path = './data/operations.db.backup.' + datetime.now().strftime('%Y%m%d%H%M%S')
+    backup_path = './data/operations.db.backup.' + now().strftime('%Y%m%d%H%M%S')
     if os.path.exists('./data/operations.db'):
         shutil.copy2('./data/operations.db', backup_path)
     
