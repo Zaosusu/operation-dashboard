@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理后台 - Operation Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-hover: #1e2a4a;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-blue: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-red: #ff3860;
+            --accent-green: #00d9a3;
+            --accent-yellow: #ffd700;
+            --border-color: #2d3748;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: rgba(255, 56, 96, 0.2);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 56, 96, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .task-table th,
+        .task-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .task-table th {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .task-table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .task-name {
+            font-weight: 500;
+        }
+
+        .task-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .task-tag.main {
+            background: rgba(255, 56, 96, 0.2);
+            color: var(--accent-red);
+        }
+
+        .task-tag.optional {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .task-tag.system {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .weekday-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .weekday-tag {
+            padding: 2px 6px;
+            background: var(--bg-hover);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.edit {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        .action-btn.delete {
+            background: rgba(255, 56, 96, 0.2);
+            color: var(--accent-red);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(255, 56, 96, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .weekday-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .weekday-option {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .weekday-option:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .weekday-option.selected {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: var(--accent-green); }
+        .toast.error { border-color: var(--accent-red); }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .help-text {
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .help-text strong {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .task-table {
+                font-size: 13px;
+            }
+
+            .task-table th,
+            .task-table td {
+                padding: 10px 8px;
+            }
+
+            .action-btns {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">⚔️ 任务管理后台</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </header>
+
+        <div class="help-text">
+            <strong>使用说明：</strong><br>
+            • 所有任务都可以编辑、删除（包括系统默认任务）<br>
+            • 主线任务必须完成才算打卡成功，支线任务可选<br>
+            • 修改任务后，今日及未来的任务实例会自动更新<br>
+            • 删除任务后，今日及未来的任务实例会被移除
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>📝</span> 任务列表
+                </h2>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <span>+</span> 新增任务
+                </button>
+            </div>
+            <div id="taskList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑任务模态框 -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">新增任务</div>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                
+                <div class="form-group">
+                    <label class="form-label">任务名称</label>
+                    <input type="text" class="form-input" id="taskName" placeholder="例如：背单词" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">任务类型</label>
+                    <select class="form-select" id="taskCategory">
+                        <option value="main">🔥 主线必做（必须完成才算打卡）</option>
+                        <option value="optional">☕ 支线选做（可选，做了加分）</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">适用星期（可多选）</label>
+                    <div class="weekday-selector" id="weekdaySelector">
+                        <div class="weekday-option" data-value="0">周一</div>
+                        <div class="weekday-option" data-value="1">周二</div>
+                        <div class="weekday-option" data-value="2">周三</div>
+                        <div class="weekday-option" data-value="3">周四</div>
+                        <div class="weekday-option" data-value="4">周五</div>
+                        <div class="weekday-option" data-value="5">周六</div>
+                        <div class="weekday-option" data-value="6">周日</div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <div class="modal-title">确认删除</div>
+                <button class="modal-close" onclick="closeDeleteModal()">×</button>
+            </div>
+            <p style="margin-bottom: 24px; color: var(--text-secondary);">
+                确定要删除任务 "<span id="deleteTaskName" style="color: var(--text-primary);"></span>" 吗？<br><br>
+                <span style="color: var(--accent-red);">删除后，今日及未来的该任务实例将被移除，此操作不可恢复。</span>
+            </p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        let tasks = [];
+        let selectedWeekdays = [];
+        let deleteTaskId = null;
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/admin/check-auth');
+                if (!response.ok) {
+                    window.location.href = '/admin/login';
+                }
+            } catch (error) {
+                window.location.href = '/admin/login';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadTasks();
+            initWeekdaySelector();
+        });
+
+        function initWeekdaySelector() {
+            const options = document.querySelectorAll('.weekday-option');
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    option.classList.toggle('selected');
+                    updateSelectedWeekdays();
+                });
+            });
+        }
+
+        function updateSelectedWeekdays() {
+            selectedWeekdays = Array.from(document.querySelectorAll('.weekday-option.selected'))
+                .map(el => el.dataset.value);
+        }
+
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/admin/task-templates');
+                const data = await response.json();
+                tasks = data.templates;
+                renderTasks();
+            } catch (error) {
+                showToast('加载任务失败', 'error');
+            }
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div>暂无任务</div>
+                        <div style="font-size: 13px; margin-top: 8px;">点击右上角"新增任务"按钮添加</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            
+            container.innerHTML = `
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th>任务名称</th>
+                            <th>类型</th>
+                            <th>适用星期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tasks.map(task => {
+                            const weekdayList = task.weekdays === 'all' 
+                                ? ['每天']
+                                : task.weekdays.split(',').sort().map(w => weekdays[parseInt(w)]);
+                            
+                            return `
+                                <tr>
+                                    <td class="task-name">
+                                        ${task.task_name}
+                                        ${task.is_system ? '<span class="task-tag system">默认</span>' : ''}
+                                    </td>
+                                    <td>
+                                        <span class="task-tag ${task.task_category}">
+                                            ${task.task_category === 'main' ? '🔥 主线' : '☕ 支线'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="weekday-tags">
+                                            ${weekdayList.map(w => `<span class="weekday-tag">${w}</span>`).join('')}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn edit" onclick="openEditModal(${task.id})">编辑</button>
+                                            <button class="action-btn delete" onclick="openDeleteModal(${task.id})">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '新增任务';
+            document.getElementById('taskId').value = '';
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskCategory').value = 'optional';
+            
+            document.querySelectorAll('.weekday-option').forEach(el => el.classList.remove('selected'));
+            selectedWeekdays = [];
+            
+            document.getElementById('taskModal').classList.add('show');
+        }
+
+        function openEditModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            document.getElementById('modalTitle').textContent = '编辑任务';
+            document.getElementById('taskId').value = task.id;
+            document.getElementById('taskName').value = task.task_name;
+            document.getElementById('taskCategory').value = task.task_category;
+            
+            document.querySelectorAll('.weekday-option').forEach(el => {
+                el.classList.remove('selected');
+                if (task.weekdays === 'all') {
+                    el.classList.add('selected');
+                } else if (task.weekdays.includes(el.dataset.value)) {
+                    el.classList.add('selected');
+                }
+            });
+            updateSelectedWeekdays();
+            
+            document.getElementById('taskModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.remove('show');
+        }
+
+        document.getElementById('taskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const taskId = document.getElementById('taskId').value;
+            const taskName = document.getElementById('taskName').value.trim();
+            const taskCategory = document.getElementById('taskCategory').value;
+            const weekdays = selectedWeekdays.length === 7 ? 'all' : selectedWeekdays.join(',');
+            
+            if (!taskName) {
+                showToast('请输入任务名称', 'error');
+                return;
+            }
+            
+            if (selectedWeekdays.length === 0) {
+                showToast('请至少选择一个星期', 'error');
+                return;
+            }
+            
+            const data = {
+                task_name: taskName,
+                task_category: taskCategory,
+                weekdays: weekdays
+            };
+            
+            try {
+                let response;
+                if (taskId) {
+                    response = await fetch(`/api/admin/task-templates/${taskId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch('/api/admin/task-templates', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(taskId ? '任务更新成功' : '任务创建成功');
+                    closeModal();
+                    loadTasks();
+                } else {
+                    showToast(result.error || '操作失败', 'error');
+                }
+            } catch (error) {
+                showToast('操作失败', 'error');
+            }
+        });
+
+        function openDeleteModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            deleteTaskId = taskId;
+            document.getElementById('deleteTaskName').textContent = task.task_name;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            deleteTaskId = null;
+        }
+
+        async function confirmDelete() {
+            if (!deleteTaskId) return;
+            
+            try {
+                const response = await fetch(`/api/admin/task-templates/${deleteTaskId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('任务删除成功');
+                    closeDeleteModal();
+                    loadTasks();
+                } else {
+                    showToast(result.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                showToast('删除失败', 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/admin/logout', { method: 'POST' });
+                window.location.href = '/admin/login';
+            } catch (error) {
+                window.location.href = '/admin/login';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        document.getElementById('taskModal').addEventListener('click', (e) => {
+            if (e.target.id === 'taskModal') closeModal();
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target.id === 'deleteModal') closeDeleteModal();
+        });
+    </script>
+</body>
+</html>

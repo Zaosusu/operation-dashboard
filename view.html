@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operation Dashboard - 今日任务</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-blue: #00d4ff;
+            --accent-red: #ff3860;
+            --accent-green: #00d9a3;
+            --accent-yellow: #ffd700;
+            --border-color: #2d3748;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 顶部 */
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .date {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .day-type {
+            font-size: 18px;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .checkin-status {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .checkin-status.success {
+            background: rgba(0, 217, 163, 0.2);
+            color: var(--accent-green);
+        }
+
+        .checkin-status.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        /* 统计 */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.yellow { color: var(--accent-yellow); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* 任务卡片 */
+        .task-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 2px solid transparent;
+        }
+
+        .task-item.main {
+            border-color: var(--accent-red);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-color: var(--accent-green);
+        }
+
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .task-item.completed .task-checkbox {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .task-checkbox::after {
+            content: '✓';
+            color: var(--bg-primary);
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0;
+        }
+
+        .task-item.completed .task-checkbox::after {
+            opacity: 1;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-name {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .task-item.completed .task-name {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .task-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .task-tag.main {
+            background: rgba(255, 56, 96, 0.2);
+            color: var(--accent-red);
+        }
+
+        .task-tag.optional {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .completed-time {
+            color: var(--accent-green);
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* 加载 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .stats {
+                gap: 24px;
+            }
+            
+            .stat-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部 -->
+        <header class="header">
+            <div class="logo">⚔️ Operation Dashboard</div>
+            <div class="date" id="currentDate">--</div>
+            <div class="day-type" id="dayType">--</div>
+            <div class="checkin-status pending" id="checkinStatus">加载中...</div>
+        </header>
+
+        <!-- 统计 -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value green" id="mainRate">0%</div>
+                <div class="stat-label">主线完成</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value blue" id="optionalRate">0%</div>
+                <div class="stat-label">支线完成</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value yellow" id="streakDays">0</div>
+                <div class="stat-label">连续打卡</div>
+            </div>
+        </div>
+
+        <!-- 主线任务 -->
+        <div class="task-section">
+            <div class="section-title">
+                <span>🔥</span> 主线任务（必做）
+            </div>
+            <div class="task-list" id="mainTaskList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 支线任务 -->
+        <div class="task-section">
+            <div class="section-title">
+                <span>☕</span> 支线任务（选做）
+            </div>
+            <div class="task-list" id="optionalTaskList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            只读展示 · 完整功能请访问主页面
+        </div>
+    </div>
+
+    <script>
+        // 加载数据
+        async function loadData() {
+            try {
+                const response = await fetch('/api/today');
+                const data = await response.json();
+                renderPage(data);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        // 渲染页面
+        function renderPage(data) {
+            // 日期和类型
+            const dateObj = new Date(data.date);
+            document.getElementById('currentDate').textContent = dateObj.toLocaleDateString('zh-CN', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+            document.getElementById('dayType').textContent = data.dayType;
+            
+            // 打卡状态
+            const checkinStatus = document.getElementById('checkinStatus');
+            if (data.stats.isValidCheckin) {
+                checkinStatus.className = 'checkin-status success';
+                checkinStatus.textContent = '✅ 今日已打卡';
+            } else {
+                checkinStatus.className = 'checkin-status pending';
+                checkinStatus.textContent = '⏳ 主线待完成';
+            }
+            
+            // 统计
+            document.getElementById('mainRate').textContent = Math.round(data.stats.mainRate) + '%';
+            document.getElementById('optionalRate').textContent = Math.round(data.stats.rate) + '%';
+            document.getElementById('streakDays').textContent = data.streak.current;
+            
+            // 主线任务
+            const mainContainer = document.getElementById('mainTaskList');
+            if (data.mainTasks.length === 0) {
+                mainContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无主线任务</div>';
+            } else {
+                mainContainer.innerHTML = data.mainTasks.map(task => `
+                    <div class="task-item main ${task.completed ? 'completed' : ''}">
+                        <div class="task-checkbox"></div>
+                        <div class="task-content">
+                            <div class="task-name">${task.name}</div>
+                            <div class="task-meta">
+                                <span class="task-tag main">主线必做</span>
+                                ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // 支线任务
+            const optionalContainer = document.getElementById('optionalTaskList');
+            if (data.optionalTasks.length === 0) {
+                optionalContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无支线任务</div>';
+            } else {
+                optionalContainer.innerHTML = data.optionalTasks.map(task => `
+                    <div class="task-item ${task.completed ? 'completed' : ''}">
+                        <div class="task-checkbox"></div>
+                        <div class="task-content">
+                            <div class="task-name">${task.name}</div>
+                            <div class="task-meta">
+                                <span class="task-tag optional">支线选做</span>
+                                ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 初始化
+        loadData();
+        
+        // 每分钟刷新
+        setInterval(loadData, 60000);
+    </script>
+</body>
+</html>

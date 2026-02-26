@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operation Dashboard - 作战仪表盘</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-hover: #1e2a4a;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-blue: #00d4ff;
+            --accent-red: #ff3860;
+            --accent-green: #00d9a3;
+            --accent-yellow: #ffd700;
+            --accent-purple: #a855f7;
+            --accent-orange: #ff8c00;
+            --border-color: #2d3748;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .datetime {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .date { font-size: 14px; color: var(--text-secondary); }
+
+        .time {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'SF Mono', monospace;
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .day-type {
+            padding: 8px 16px;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .day-type span { color: var(--accent-green); font-weight: 600; }
+
+        .checkin-status {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .checkin-status.success {
+            background: rgba(0, 217, 163, 0.2);
+            color: var(--accent-green);
+        }
+
+        .checkin-status.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-blue);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: white;
+        }
+
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.yellow { color: var(--accent-yellow); }
+        .stat-value.orange { color: var(--accent-orange); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            background: var(--bg-hover);
+            transform: translateX(4px);
+        }
+
+        .task-item.main {
+            border-color: var(--accent-red);
+            background: linear-gradient(135deg, rgba(255, 56, 96, 0.05), var(--bg-card));
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-color: var(--accent-green);
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.completed .task-checkbox {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .task-checkbox::after {
+            content: '✓';
+            color: var(--bg-primary);
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .task-item.completed .task-checkbox::after { opacity: 1; }
+
+        .task-content { flex: 1; }
+
+        .task-name {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .task-item.completed .task-name {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .task-tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .task-tag.main {
+            background: rgba(255, 56, 96, 0.2);
+            color: var(--accent-red);
+        }
+
+        .task-tag.optional {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .completed-time {
+            font-size: 11px;
+            color: var(--accent-green);
+        }
+
+        .completed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .completed-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+        }
+
+        .completed-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 217, 163, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .completed-info { flex: 1; }
+
+        .completed-name { font-size: 14px; }
+
+        .completed-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .week-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 180px;
+            padding: 20px 0;
+            gap: 12px;
+        }
+
+        .week-bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .week-bar-container:hover { transform: translateY(-4px); }
+
+        .week-bar {
+            width: 100%;
+            max-width: 40px;
+            background: linear-gradient(to top, var(--accent-red), #ff6b6b);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 4px;
+        }
+
+        .week-bar.valid {
+            background: linear-gradient(to top, var(--accent-green), #00b894);
+        }
+
+        .week-bar.today {
+            box-shadow: 0 0 20px rgba(0, 217, 163, 0.4);
+        }
+
+        .week-bar-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .week-bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .week-bar-container:hover .week-bar-value { opacity: 1; }
+
+        .history-controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .date-picker {
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .date-picker:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-blue);
+        }
+
+        .history-date {
+            min-width: 100px;
+            font-weight: 500;
+        }
+
+        .history-type {
+            padding: 4px 12px;
+            background: var(--bg-hover);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-progress {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-hover);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .history-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-red), #ff6b6b);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .history-progress-bar.valid {
+            background: linear-gradient(90deg, var(--accent-green), #00b894);
+        }
+
+        .history-rate {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .lifetime-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .lifetime-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .lifetime-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .lifetime-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .lifetime-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-family: 'SF Mono', monospace;
+            color: var(--accent-blue);
+        }
+
+        .lifetime-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .achievement-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid var(--border-color);
+            opacity: 0.5;
+        }
+
+        .achievement-card.unlocked {
+            opacity: 1;
+            border-color: var(--accent-yellow);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--bg-card));
+        }
+
+        .achievement-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .achievement-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .achievement-desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-blue);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: var(--accent-green); }
+        .toast.error { border-color: var(--accent-red); }
+
+        .achievement-toast {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), var(--bg-card));
+            border: 2px solid var(--accent-yellow);
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 1001;
+        }
+
+        .achievement-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .achievement-toast-icon { font-size: 48px; }
+
+        .achievement-toast-content { flex: 1; }
+
+        .achievement-toast-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .achievement-toast-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-yellow);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 640px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .time { font-size: 24px; }
+
+            .card { padding: 16px; }
+
+            .stat-value { font-size: 24px; }
+
+            .lifetime-grid { grid-template-columns: 1fr; }
+
+            .achievements-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .achievement-toast {
+                right: 10px;
+                left: 10px;
+                transform: translateY(-200px);
+            }
+
+            .achievement-toast.show {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">⚔️ Operation Dashboard</div>
+                <div class="datetime">
+                    <div class="date" id="currentDate">--</div>
+                    <div class="time" id="currentTime">--:--:--</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="day-type">今日: <span id="dayType">--</span></div>
+                <div class="checkin-status pending" id="checkinStatus">加载中...</div>
+            </div>
+        </header>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('today')">📅 今日任务</div>
+            <div class="nav-tab" onclick="switchTab('stats')">📊 累计统计</div>
+            <div class="nav-tab" onclick="switchTab('achievements')">🏆 成就</div>
+            <div class="nav-tab" onclick="switchTab('history')">📜 历史</div>
+        </div>
+
+        <div class="page-content active" id="page-today">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value green" id="mainRate">0%</div>
+                    <div class="stat-label">主线完成率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value blue" id="optionalRate">0%</div>
+                    <div class="stat-label">支线完成率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value yellow" id="streakDays">0</div>
+                    <div class="stat-label">连续打卡</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value orange" id="completedCount">0</div>
+                    <div class="stat-label">今日完成</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">🔥</span>
+                    主线任务（必做）
+                </h2>
+                <div class="task-list" id="mainTaskList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">☕</span>
+                    支线任务（选做，有空就做）
+                </h2>
+                <div class="task-list" id="optionalTaskList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="completedCard">
+                <h2 class="card-title">
+                    <span class="icon">✅</span>
+                    今日已完成
+                </h2>
+                <div class="completed-list" id="completedList">
+                    <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                        暂无已完成任务
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">📊</span>
+                    本周打卡情况（绿色=打卡成功）
+                </h2>
+                <div class="week-chart" id="weekChart"></div>
+            </div>
+
+            <div class="footer-actions">
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <span>🔄</span> 刷新
+                </button>
+                <button class="btn btn-secondary" onclick="exportData()">
+                    <span>💾</span> 导出备份
+                </button>
+            </div>
+        </div>
+
+        <div class="page-content" id="page-stats">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">📈</span>
+                    累计学习统计
+                </h2>
+                <div class="lifetime-grid" id="lifetimeStats">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="page-achievements">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">🏆</span>
+                    我的成就
+                </h2>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="page-history">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">📜</span>
+                    历史记录
+                </h2>
+                <div class="history-controls">
+                    <input type="date" class="date-picker" id="historyDate" onchange="loadHistoryDate()">
+                    <span style="color: var(--text-secondary);">或</span>
+                    <input type="date" class="date-picker" id="historyStartDate">
+                    <span style="color: var(--text-secondary);">至</span>
+                    <input type="date" class="date-picker" id="historyEndDate">
+                    <button class="btn btn-primary" onclick="loadHistoryRange()">
+                        <span>🔍</span> 查询
+                    </button>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        选择日期查看历史记录
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <div class="achievement-toast" id="achievementToast">
+        <span class="achievement-toast-icon" id="achievementToastIcon">🏆</span>
+        <div class="achievement-toast-content">
+            <div class="achievement-toast-title">解锁新成就！</div>
+            <div class="achievement-toast-name" id="achievementToastName">--</div>
+        </div>
+    </div>
+
+    <div class="modal" id="dateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">日期详情</div>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let autoRefreshInterval = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initClock();
+            loadData();
+            startAutoRefresh();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('historyDate').value = today;
+        });
+
+        function initClock() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-CN', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('zh-CN', {
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`page-${tabName}`).classList.add('active');
+            
+            if (tabName === 'stats') loadLifetimeStats();
+            if (tabName === 'achievements') loadAchievements();
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/today');
+                const data = await response.json();
+                currentData = data;
+                renderDashboard(data);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showToast('加载数据失败', 'error');
+            }
+        }
+
+        function renderDashboard(data) {
+            document.getElementById('dayType').textContent = data.dayType;
+            
+            const checkinStatus = document.getElementById('checkinStatus');
+            if (data.stats.isValidCheckin) {
+                checkinStatus.className = 'checkin-status success';
+                checkinStatus.innerHTML = '✅ 今日已打卡';
+            } else {
+                checkinStatus.className = 'checkin-status pending';
+                checkinStatus.innerHTML = '⏳ 主线待完成';
+            }
+            
+            document.getElementById('mainRate').textContent = Math.round(data.stats.mainRate) + '%';
+            document.getElementById('optionalRate').textContent = Math.round(data.stats.rate) + '%';
+            document.getElementById('streakDays').textContent = data.streak.current;
+            document.getElementById('completedCount').textContent = data.stats.completed;
+            
+            renderMainTasks(data.mainTasks);
+            renderOptionalTasks(data.optionalTasks);
+            renderCompletedList(data.completedTasks);
+            loadWeekData();
+        }
+
+        function renderMainTasks(tasks) {
+            const container = document.getElementById('mainTaskList');
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无主线任务</div>';
+                return;
+            }
+            
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item main ${task.completed ? 'completed' : ''}" onclick="toggleTask(${task.id}, ${!task.completed})">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-meta">
+                            <span class="task-tag main">主线必做</span>
+                            ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOptionalTasks(tasks) {
+            const container = document.getElementById('optionalTaskList');
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无支线任务</div>';
+                return;
+            }
+            
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''}" onclick="toggleTask(${task.id}, ${!task.completed})">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-meta">
+                            <span class="task-tag optional">支线选做</span>
+                            ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCompletedList(completedTasks) {
+            const container = document.getElementById('completedList');
+            const card = document.getElementById('completedCard');
+            
+            if (!completedTasks || completedTasks.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+            
+            card.style.display = 'block';
+            container.innerHTML = completedTasks.map(task => `
+                <div class="completed-item">
+                    <div class="completed-icon">✓</div>
+                    <div class="completed-info">
+                        <div class="completed-name">${task.name}</div>
+                        <div class="completed-meta">
+                            ${task.category === 'main' ? '🔥 主线' : '☕ 支线'} · ${task.completedAt ? task.completedAt.substring(11, 16) : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadWeekData() {
+            try {
+                const response = await fetch('/api/week');
+                const data = await response.json();
+                renderWeekChart(data.weekData);
+            } catch (error) {
+                console.error('加载周数据失败:', error);
+            }
+        }
+
+        function renderWeekChart(weekData) {
+            const container = document.getElementById('weekChart');
+            
+            container.innerHTML = weekData.map(day => {
+                const height = day.total > 0 ? (day.mainRate / 100 * 100) : 4;
+                const isToday = day.date === new Date().toISOString().split('T')[0];
+                
+                return `
+                    <div class="week-bar-container" onclick="showDateDetail('${day.date}')">
+                        <div class="week-bar ${day.isValidCheckin ? 'valid' : ''} ${isToday ? 'today' : ''}" 
+                             style="height: ${Math.max(height, 4)}%;">
+                            <span class="week-bar-value">${Math.round(day.mainRate)}%</span>
+                        </div>
+                        <span class="week-bar-label">${day.weekday}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function toggleTask(taskId, completed) {
+            try {
+                const response = await fetch(`/api/task/${taskId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ completed })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const timeStr = data.completedAt || new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
+                    showToast(completed ? `任务已完成 · ${timeStr}` : '任务已取消');
+                    
+                    if (data.newAchievements && data.newAchievements.length > 0) {
+                        data.newAchievements.forEach(ach => showAchievementToast(ach));
+                    }
+                    
+                    loadData();
+                }
+            } catch (error) {
+                console.error('切换任务状态失败:', error);
+                showToast('操作失败', 'error');
+            }
+        }
+
+        async function loadLifetimeStats() {
+            try {
+                const response = await fetch('/api/lifetime');
+                const data = await response.json();
+                renderLifetimeStats(data.lifetime);
+            } catch (error) {
+                console.error('加载累计统计失败:', error);
+            }
+        }
+
+        function renderLifetimeStats(lifetime) {
+            const container = document.getElementById('lifetimeStats');
+            
+            const stats = [
+                { icon: '📚', value: lifetime.totalTasks, label: '累计完成任务' },
+                { icon: '🔥', value: lifetime.mainTasks, label: '主线任务' },
+                { icon: '☕', value: lifetime.optionalTasks, label: '支线任务' },
+                { icon: '📅', value: lifetime.studyDays, label: '有效打卡日' },
+                { icon: '💎', value: lifetime.perfectDays, label: '完美天数' },
+                { icon: '📐', value: lifetime.mathDays, label: '数学日' }
+            ];
+            
+            container.innerHTML = stats.map(stat => `
+                <div class="lifetime-card">
+                    <div class="lifetime-icon">${stat.icon}</div>
+                    <div class="lifetime-value">${stat.value}</div>
+                    <div class="lifetime-label">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadAchievements() {
+            try {
+                const response = await fetch('/api/achievements');
+                const data = await response.json();
+                renderAchievements(data.achievements);
+            } catch (error) {
+                console.error('加载成就失败:', error);
+            }
+        }
+
+        function renderAchievements(achievements) {
+            const container = document.getElementById('achievementsGrid');
+            
+            container.innerHTML = achievements.map(ach => `
+                <div class="achievement-card ${ach.unlocked ? 'unlocked' : ''}">
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-name">${ach.name}</div>
+                    <div class="achievement-desc">${ach.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadHistoryDate() {
+            const date = document.getElementById('historyDate').value;
+            if (!date) return;
+            
+            try {
+                const response = await fetch(`/api/history/${date}`);
+                const data = await response.json();
+                renderHistoryList([data]);
+            } catch (error) {
+                showToast('加载历史失败', 'error');
+            }
+        }
+
+        async function loadHistoryRange() {
+            const start = document.getElementById('historyStartDate').value;
+            const end = document.getElementById('historyEndDate').value;
+            
+            if (!start || !end) {
+                showToast('请选择日期范围', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/history/range/${start}/${end}`);
+                const data = await response.json();
+                renderHistoryList(data.history);
+            } catch (error) {
+                showToast('加载历史失败', 'error');
+            }
+        }
+
+        function renderHistoryList(history) {
+            const container = document.getElementById('historyList');
+            
+            if (!history || history.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">该时间段暂无记录</div>';
+                return;
+            }
+            
+            container.innerHTML = history.map(day => {
+                const date = new Date(day.date);
+                const dateStr = date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+                const weekday = ['日', '一', '二', '三', '四', '五', '六'][date.getDay()];
+                
+                return `
+                    <div class="history-item" onclick="showDateDetail('${day.date}')">
+                        <div class="history-date">${dateStr} 周${weekday}</div>
+                        <div class="history-type">${day.dayType || '未知'}</div>
+                        <div class="history-progress">
+                            <div class="history-progress-bar ${day.isValidCheckin ? 'valid' : ''}" style="width: ${day.mainRate}%"></div>
+                        </div>
+                        <div class="history-rate" style="color: ${day.isValidCheckin ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                            ${Math.round(day.mainRate)}%
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function showDateDetail(date) {
+            try {
+                const response = await fetch(`/api/history/${date}`);
+                const data = await response.json();
+                
+                const dateObj = new Date(date);
+                const dateStr = dateObj.toLocaleDateString('zh-CN', { 
+                    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 
+                });
+                
+                document.getElementById('modalTitle').textContent = dateStr;
+                
+                const mainTasks = data.tasks.filter(t => t.category === 'main');
+                const optionalTasks = data.tasks.filter(t => t.category === 'optional');
+                
+                const mainCompleted = mainTasks.filter(t => t.completed).map(t => 
+                    `<div style="padding: 8px 0;">✅ ${t.name}</div>`
+                ).join('') || '<div style="padding: 8px 0; color: var(--text-secondary);">无</div>';
+                
+                const mainPending = mainTasks.filter(t => !t.completed).map(t => 
+                    `<div style="padding: 8px 0; opacity: 0.6;">⬜ ${t.name}</div>`
+                ).join('') || '';
+                
+                const optionalCompleted = optionalTasks.filter(t => t.completed).map(t => 
+                    `<div style="padding: 8px 0;">✅ ${t.name}</div>`
+                ).join('') || '<div style="padding: 8px 0; color: var(--text-secondary);">无</div>';
+                
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">当日类型</div>
+                        <div style="font-size: 18px; font-weight: 600;">${data.dayType}</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">打卡状态</div>
+                        <div style="font-size: 24px; font-weight: 700; color: ${data.stats.isValidCheckin ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                            ${data.stats.isValidCheckin ? '✅ 已打卡' : '❌ 未打卡'}
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">主线任务 (${data.stats.completed}/${data.stats.total})</div>
+                        ${mainCompleted}
+                        ${mainPending}
+                    </div>
+                    <div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">支线任务</div>
+                        ${optionalCompleted}
+                    </div>
+                `;
+                
+                document.getElementById('dateModal').classList.add('show');
+            } catch (error) {
+                showToast('加载详情失败', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('dateModal').classList.remove('show');
+        }
+
+        function refreshData() {
+            loadData();
+            showToast('数据已刷新');
+        }
+
+        async function exportData() {
+            try {
+                const response = await fetch('/api/export');
+                const data = await response.json();
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `operation_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('数据已导出');
+            } catch (error) {
+                showToast('导出失败', 'error');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function showAchievementToast(achievement) {
+            const toast = document.getElementById('achievementToast');
+            document.getElementById('achievementToastIcon').textContent = achievement.icon;
+            document.getElementById('achievementToastName').textContent = achievement.name;
+            toast.classList.add('show');
+            
+            setTimeout(() => toast.classList.remove('show'), 5000);
+        }
+
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                if (document.getElementById('page-today').classList.contains('active')) {
+                    loadData();
+                }
+            }, 60000);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                loadData();
+            }
+        });
+
+        document.getElementById('dateModal').addEventListener('click', (e) => {
+            if (e.target.id === 'dateModal') closeModal();
+        });
+    </script>
+</body>
+</html>
