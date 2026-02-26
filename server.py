@@ -12,8 +12,9 @@ import sqlite3
 import hashlib
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, jsonify, request, send_from_directory, redirect, session
+from flask import Flask, jsonify, request, send_from_directory, redirect, session,send_file
 from flask_cors import CORS
+import shutil 
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'operation-dashboard-secret-key-2024')
@@ -679,6 +680,8 @@ def admin_login_page():
 
 # ==================== API 路由 ====================
 
+
+
 @app.route('/api/today')
 def get_today():
     """获取今日任务列表+状态"""
@@ -1093,6 +1096,43 @@ def delete_task_template(template_id):
             conn.close()
         return jsonify({"success": False, "error": f"删除失败: {str(e)}"}), 500
 
+# 导出数据库
+@app.route('/api/admin/export-db', methods=['GET'])
+@admin_required
+def export_db():
+    """导出数据库文件"""
+    return send_file('./data/operations.db', as_attachment=True)
+
+# 导入数据库
+@app.route('/api/admin/import-db', methods=['POST'])
+@admin_required
+def import_db():
+    """导入数据库文件"""
+    if 'db' not in request.files:
+        return jsonify({'success': False, 'error': '没有上传文件'}), 400
+    
+    file = request.files['db']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': '文件名为空'}), 400
+    
+    # 确保是 .db 文件
+    if not file.filename.endswith('.db'):
+        return jsonify({'success': False, 'error': '必须是 .db 文件'}), 400
+    
+    # 备份原数据库
+    import shutil
+    backup_path = './data/operations.db.backup.' + datetime.now().strftime('%Y%m%d%H%M%S')
+    if os.path.exists('./data/operations.db'):
+        shutil.copy2('./data/operations.db', backup_path)
+    
+    # 保存新数据库
+    file.save('./data/operations.db')
+    
+    return jsonify({
+        'success': True, 
+        'message': '数据库已恢复，原数据库已备份',
+        'backup': backup_path
+    })
 
 # 初始化数据库
 init_database()

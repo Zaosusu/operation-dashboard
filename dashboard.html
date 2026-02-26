@@ -846,9 +846,9 @@
                 <button class="btn btn-primary" onclick="refreshData()">
                     <span>🔄</span> 刷新
                 </button>
-                <button class="btn btn-secondary" onclick="exportData()">
+                <!-- <button class="btn btn-secondary" onclick="exportData()">
                     <span>💾</span> 导出备份
-                </button>
+                </button> -->
             </div>
         </div>
 
@@ -1299,26 +1299,27 @@
             showToast('数据已刷新');
         }
 
-        async function exportData() {
-            try {
-                const response = await fetch('/api/export');
-                const data = await response.json();
+        // async function exportData() {
+        //     try {
+        //         // 导出 JSON 备份
+        //         const response = await fetch('/api/export');
+        //         const data = await response.json();
                 
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `operation_backup_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+        //         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        //         const url = URL.createObjectURL(blob);
+        //         const a = document.createElement('a');
+        //         a.href = url;
+        //         a.download = `operation_backup_${new Date().toISOString().split('T')[0]}.json`;
+        //         document.body.appendChild(a);
+        //         a.click();
+        //         document.body.removeChild(a);
+        //         URL.revokeObjectURL(url);
                 
-                showToast('数据已导出');
-            } catch (error) {
-                showToast('导出失败', 'error');
-            }
-        }
+        //         showToast('JSON 数据已导出（如需完整数据库备份请去管理后台）');
+        //     } catch (error) {
+        //         showToast('导出失败', 'error');
+        //     }
+        // }
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
