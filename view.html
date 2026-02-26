@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operation Dashboard - 今日任务</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Operation Dashboard - 今日任务（只读）</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         :root {
             --bg-primary: #0f0f23;
             --bg-secondary: #1a1a2e;
             --bg-card: #16213e;
+            --bg-hover: #1e2a4a;
             --text-primary: #e2e8f0;
             --text-secondary: #94a3b8;
             --accent-blue: #00d4ff;
             --accent-red: #ff3860;
             --accent-green: #00d9a3;
             --accent-yellow: #ffd700;
+            --accent-purple: #a855f7;
+            --accent-orange: #ff8c00;
             --border-color: #2d3748;
         }
 
@@ -33,44 +33,74 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        /* 顶部 */
+        /* 头部样式 - 与主页一致 */
         .header {
-            text-align: center;
-            padding: 30px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border-radius: 16px;
             margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
         .logo {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
         }
 
-        .date {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
+        .datetime {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .date { font-size: 14px; color: var(--text-secondary); }
+
+        .time {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'SF Mono', monospace;
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .day-type {
-            font-size: 18px;
-            color: var(--accent-green);
-            font-weight: 600;
+            padding: 8px 16px;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
         }
 
+        .day-type span { color: var(--accent-green); font-weight: 600; }
+
         .checkin-status {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
         }
@@ -85,54 +115,96 @@
             color: var(--accent-yellow);
         }
 
-        /* 统计 */
-        .stats {
+        /* 导航标签 - 与主页一致 */
+        .nav-tabs {
             display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 30px;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        .stat-item {
+        .nav-tab {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-blue);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: white;
+        }
+
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        /* 统计卡片 - 与主页一致 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
             text-align: center;
+            border: 1px solid var(--border-color);
         }
 
         .stat-value {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
+            margin-bottom: 8px;
             font-family: 'SF Mono', monospace;
         }
 
         .stat-value.green { color: var(--accent-green); }
         .stat-value.blue { color: var(--accent-blue); }
         .stat-value.yellow { color: var(--accent-yellow); }
+        .stat-value.orange { color: var(--accent-orange); }
 
         .stat-label {
             font-size: 12px;
             color: var(--text-secondary);
-            margin-top: 4px;
         }
 
-        /* 任务卡片 */
-        .task-section {
+        /* 卡片样式 - 与主页一致 */
+        .card {
             background: var(--bg-secondary);
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
+            padding: 24px;
             border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
 
-        .section-title {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
+        /* 任务列表 - 与主页一致 */
         .task-list {
             display: flex;
             flex-direction: column;
@@ -142,15 +214,17 @@
         .task-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
+            gap: 16px;
+            padding: 16px;
             background: var(--bg-card);
-            border-radius: 10px;
+            border-radius: 12px;
             border: 2px solid transparent;
+            transition: all 0.3s ease;
         }
 
         .task-item.main {
             border-color: var(--accent-red);
+            background: linear-gradient(135deg, rgba(255, 56, 96, 0.05), var(--bg-card));
         }
 
         .task-item.completed {
@@ -159,10 +233,10 @@
         }
 
         .task-checkbox {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border: 2px solid var(--border-color);
-            border-radius: 50%;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -177,22 +251,18 @@
         .task-checkbox::after {
             content: '✓';
             color: var(--bg-primary);
-            font-size: 12px;
             font-weight: 700;
             opacity: 0;
         }
 
-        .task-item.completed .task-checkbox::after {
-            opacity: 1;
-        }
+        .task-item.completed .task-checkbox::after { opacity: 1; }
 
-        .task-content {
-            flex: 1;
-        }
+        .task-content { flex: 1; }
 
         .task-name {
             font-size: 15px;
             font-weight: 500;
+            margin-bottom: 4px;
         }
 
         .task-item.completed .task-name {
@@ -201,18 +271,18 @@
         }
 
         .task-meta {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-secondary);
-            margin-top: 4px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         .task-tag {
-            display: inline-block;
             padding: 2px 8px;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 500;
-            margin-right: 8px;
         }
 
         .task-tag.main {
@@ -226,18 +296,261 @@
         }
 
         .completed-time {
+            font-size: 11px;
             color: var(--accent-green);
         }
 
-        /* 底部 */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
+        /* 已完成列表 - 与主页一致 */
+        .completed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .completed-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+        }
+
+        .completed-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 217, 163, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 12px;
         }
 
-        /* 加载 */
+        .completed-info { flex: 1; }
+
+        .completed-name { font-size: 14px; }
+
+        .completed-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* 周图表 - 与主页一致 */
+        .week-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 180px;
+            padding: 20px 0;
+            gap: 12px;
+        }
+
+        .week-bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .week-bar {
+            width: 100%;
+            max-width: 40px;
+            background: linear-gradient(to top, var(--accent-red), #ff6b6b);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            min-height: 4px;
+        }
+
+        .week-bar.valid {
+            background: linear-gradient(to top, var(--accent-green), #00b894);
+        }
+
+        .week-bar.today {
+            box-shadow: 0 0 20px rgba(0, 217, 163, 0.4);
+        }
+
+        .week-bar-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .week-bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 累计统计页面 */
+        .lifetime-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .lifetime-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .lifetime-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .lifetime-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .lifetime-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-family: 'SF Mono', monospace;
+            color: var(--accent-blue);
+        }
+
+        .lifetime-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* 成就页面 */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .achievement-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid var(--border-color);
+            opacity: 0.5;
+        }
+
+        .achievement-card.unlocked {
+            opacity: 1;
+            border-color: var(--accent-yellow);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--bg-card));
+        }
+
+        .achievement-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .achievement-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .achievement-desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        /* 历史记录页面 */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .history-date {
+            min-width: 100px;
+            font-weight: 500;
+        }
+
+        .history-type {
+            padding: 4px 12px;
+            background: var(--bg-hover);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-progress {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-hover);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .history-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-red), #ff6b6b);
+            border-radius: 4px;
+        }
+
+        .history-progress-bar.valid {
+            background: linear-gradient(90deg, var(--accent-green), #00b894);
+        }
+
+        .history-rate {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+        }
+
+        /* 底部提示 */
+        .footer-notice {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        /* 提示弹窗 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* 加载动画 */
         .loading {
             display: flex;
             justify-content: center;
@@ -254,158 +567,416 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* 响应式 */
         @media (max-width: 640px) {
-            .stats {
-                gap: 24px;
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
             }
-            
-            .stat-value {
-                font-size: 28px;
-            }
+
+            .time { font-size: 24px; }
+
+            .card { padding: 16px; }
+
+            .stat-value { font-size: 24px; }
+
+            .lifetime-grid { grid-template-columns: 1fr; }
+
+            .achievements-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 顶部 -->
+        <!-- 头部 - 与主页一致 -->
         <header class="header">
-            <div class="logo">⚔️ Operation Dashboard</div>
-            <div class="date" id="currentDate">--</div>
-            <div class="day-type" id="dayType">--</div>
-            <div class="checkin-status pending" id="checkinStatus">加载中...</div>
+            <div class="header-left">
+                <div class="logo">⚔️ Operation Dashboard</div>
+                <div class="datetime">
+                    <div class="date" id="currentDate">--</div>
+                    <div class="time" id="currentTime">--:--:--</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="day-type">今日: <span id="dayType">--</span></div>
+                <div class="checkin-status pending" id="checkinStatus">加载中...</div>
+            </div>
         </header>
 
-        <!-- 统计 -->
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-value green" id="mainRate">0%</div>
-                <div class="stat-label">主线完成</div>
+        <!-- 导航标签 - 与主页一致 -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('today')">📅 今日任务</div>
+            <div class="nav-tab" onclick="switchTab('stats')">📊 累计统计</div>
+            <div class="nav-tab" onclick="switchTab('achievements')">🏆 成就</div>
+            <div class="nav-tab" onclick="switchTab('history')">📜 历史</div>
+        </div>
+
+        <!-- 今日任务页面 -->
+        <div class="page-content active" id="page-today">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value green" id="mainRate">0%</div>
+                    <div class="stat-label">主线完成率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value blue" id="optionalRate">0%</div>
+                    <div class="stat-label">支线完成率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value yellow" id="streakDays">0</div>
+                    <div class="stat-label">连续打卡</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value orange" id="completedCount">0</div>
+                    <div class="stat-label">今日完成</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value blue" id="optionalRate">0%</div>
-                <div class="stat-label">支线完成</div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span>🔥</span>
+                    主线任务（必做）
+                </h2>
+                <div class="task-list" id="mainTaskList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value yellow" id="streakDays">0</div>
-                <div class="stat-label">连续打卡</div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span>☕</span>
+                    支线任务（选做，有空就做）
+                </h2>
+                <div class="task-list" id="optionalTaskList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="completedCard">
+                <h2 class="card-title">
+                    <span>✅</span>
+                    今日已完成
+                </h2>
+                <div class="completed-list" id="completedList">
+                    <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                        暂无已完成任务
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span>📊</span>
+                    本周打卡情况（绿色=打卡成功）
+                </h2>
+                <div class="week-chart" id="weekChart"></div>
             </div>
         </div>
 
-        <!-- 主线任务 -->
-        <div class="task-section">
-            <div class="section-title">
-                <span>🔥</span> 主线任务（必做）
-            </div>
-            <div class="task-list" id="mainTaskList">
-                <div class="loading">
-                    <div class="loading-spinner"></div>
+        <!-- 累计统计页面 -->
+        <div class="page-content" id="page-stats">
+            <div class="card">
+                <h2 class="card-title">
+                    <span>📈</span>
+                    累计学习统计
+                </h2>
+                <div class="lifetime-grid" id="lifetimeStats">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 支线任务 -->
-        <div class="task-section">
-            <div class="section-title">
-                <span>☕</span> 支线任务（选做）
-            </div>
-            <div class="task-list" id="optionalTaskList">
-                <div class="loading">
-                    <div class="loading-spinner"></div>
+        <!-- 成就页面 -->
+        <div class="page-content" id="page-achievements">
+            <div class="card">
+                <h2 class="card-title">
+                    <span>🏆</span>
+                    我的成就
+                </h2>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 底部 -->
-        <div class="footer">
-            只读展示 · 完整功能请访问主页面
+        <!-- 历史记录页面 -->
+        <div class="page-content" id="page-history">
+            <div class="card">
+                <h2 class="card-title">
+                    <span>📜</span>
+                    历史记录
+                </h2>
+                <div class="history-list" id="historyList">
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部提示 -->
+        <div class="footer-notice">
+            🔒 只读展示模式 · 实时同步 · 每5秒自动刷新 · 完整功能请访问主页面
         </div>
     </div>
 
+    <div class="toast" id="toast"></div>
+
     <script>
-        // 加载数据
+        // 初始化时钟
+        function initClock() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-CN', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('zh-CN', {
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`page-${tabName}`).classList.add('active');
+            
+            if (tabName === 'stats') loadLifetimeStats();
+            if (tabName === 'achievements') loadAchievements();
+            if (tabName === 'history') loadHistory();
+        }
+
+        // 加载今日数据
         async function loadData() {
             try {
                 const response = await fetch('/api/today');
                 const data = await response.json();
-                renderPage(data);
+                renderDashboard(data);
             } catch (error) {
                 console.error('加载数据失败:', error);
             }
         }
 
-        // 渲染页面
-        function renderPage(data) {
-            // 日期和类型
-            const dateObj = new Date(data.date);
-            document.getElementById('currentDate').textContent = dateObj.toLocaleDateString('zh-CN', {
-                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
-            });
+        function renderDashboard(data) {
             document.getElementById('dayType').textContent = data.dayType;
             
-            // 打卡状态
             const checkinStatus = document.getElementById('checkinStatus');
             if (data.stats.isValidCheckin) {
                 checkinStatus.className = 'checkin-status success';
-                checkinStatus.textContent = '✅ 今日已打卡';
+                checkinStatus.innerHTML = '✅ 今日已打卡';
             } else {
                 checkinStatus.className = 'checkin-status pending';
-                checkinStatus.textContent = '⏳ 主线待完成';
+                checkinStatus.innerHTML = '⏳ 主线待完成';
             }
             
-            // 统计
             document.getElementById('mainRate').textContent = Math.round(data.stats.mainRate) + '%';
             document.getElementById('optionalRate').textContent = Math.round(data.stats.rate) + '%';
             document.getElementById('streakDays').textContent = data.streak.current;
+            document.getElementById('completedCount').textContent = data.stats.completed;
             
-            // 主线任务
-            const mainContainer = document.getElementById('mainTaskList');
-            if (data.mainTasks.length === 0) {
-                mainContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无主线任务</div>';
-            } else {
-                mainContainer.innerHTML = data.mainTasks.map(task => `
-                    <div class="task-item main ${task.completed ? 'completed' : ''}">
-                        <div class="task-checkbox"></div>
-                        <div class="task-content">
-                            <div class="task-name">${task.name}</div>
-                            <div class="task-meta">
-                                <span class="task-tag main">主线必做</span>
-                                ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+            renderMainTasks(data.mainTasks);
+            renderOptionalTasks(data.optionalTasks);
+            renderCompletedList(data.completedTasks);
+            loadWeekData();
+        }
+
+        function renderMainTasks(tasks) {
+            const container = document.getElementById('mainTaskList');
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无主线任务</div>';
+                return;
             }
-            
-            // 支线任务
-            const optionalContainer = document.getElementById('optionalTaskList');
-            if (data.optionalTasks.length === 0) {
-                optionalContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无支线任务</div>';
-            } else {
-                optionalContainer.innerHTML = data.optionalTasks.map(task => `
-                    <div class="task-item ${task.completed ? 'completed' : ''}">
-                        <div class="task-checkbox"></div>
-                        <div class="task-content">
-                            <div class="task-name">${task.name}</div>
-                            <div class="task-meta">
-                                <span class="task-tag optional">支线选做</span>
-                                ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
-                            </div>
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item main ${task.completed ? 'completed' : ''}">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-meta">
+                            <span class="task-tag main">主线必做</span>
+                            ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
                         </div>
                     </div>
-                `).join('');
+                </div>
+            `).join('');
+        }
+
+        function renderOptionalTasks(tasks) {
+            const container = document.getElementById('optionalTaskList');
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">今日无支线任务</div>';
+                return;
+            }
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''}">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-meta">
+                            <span class="task-tag optional">支线选做</span>
+                            ${task.completedAt ? `<span class="completed-time">✓ ${task.completedAt.substring(11, 16)}完成</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCompletedList(completedTasks) {
+            const container = document.getElementById('completedList');
+            const card = document.getElementById('completedCard');
+            if (!completedTasks || completedTasks.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+            card.style.display = 'block';
+            container.innerHTML = completedTasks.map(task => `
+                <div class="completed-item">
+                    <div class="completed-icon">✓</div>
+                    <div class="completed-info">
+                        <div class="completed-name">${task.name}</div>
+                        <div class="completed-meta">
+                            ${task.category === 'main' ? '🔥 主线' : '☕ 支线'} · ${task.completedAt ? task.completedAt.substring(11, 16) : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadWeekData() {
+            try {
+                const response = await fetch('/api/week');
+                const data = await response.json();
+                renderWeekChart(data.weekData);
+            } catch (error) {
+                console.error('加载周数据失败:', error);
             }
         }
 
+        function renderWeekChart(weekData) {
+            const container = document.getElementById('weekChart');
+            container.innerHTML = weekData.map(day => {
+                const height = day.total > 0 ? (day.mainRate / 100 * 100) : 4;
+                const isToday = day.date === new Date().toISOString().split('T')[0];
+                return `
+                    <div class="week-bar-container">
+                        <div class="week-bar ${day.isValidCheckin ? 'valid' : ''} ${isToday ? 'today' : ''}" 
+                             style="height: ${Math.max(height, 4)}%;">
+                            <span class="week-bar-value">${Math.round(day.mainRate)}%</span>
+                        </div>
+                        <span class="week-bar-label">${day.weekday}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 加载累计统计
+        async function loadLifetimeStats() {
+            try {
+                const response = await fetch('/api/lifetime');
+                const data = await response.json();
+                const lifetime = data.lifetime;
+                const stats = [
+                    { icon: '📚', value: lifetime.totalTasks, label: '累计完成任务' },
+                    { icon: '🔥', value: lifetime.mainTasks, label: '主线任务' },
+                    { icon: '☕', value: lifetime.optionalTasks, label: '支线任务' },
+                    { icon: '📅', value: lifetime.studyDays, label: '有效打卡日' },
+                    { icon: '💎', value: lifetime.perfectDays, label: '完美天数' },
+                    { icon: '📐', value: lifetime.mathDays, label: '数学日' }
+                ];
+                document.getElementById('lifetimeStats').innerHTML = stats.map(stat => `
+                    <div class="lifetime-card">
+                        <div class="lifetime-icon">${stat.icon}</div>
+                        <div class="lifetime-value">${stat.value}</div>
+                        <div class="lifetime-label">${stat.label}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载累计统计失败:', error);
+            }
+        }
+
+        // 加载成就
+        async function loadAchievements() {
+            try {
+                const response = await fetch('/api/achievements');
+                const data = await response.json();
+                document.getElementById('achievementsGrid').innerHTML = data.achievements.map(ach => `
+                    <div class="achievement-card ${ach.unlocked ? 'unlocked' : ''}">
+                        <div class="achievement-icon">${ach.icon}</div>
+                        <div class="achievement-name">${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载成就失败:', error);
+            }
+        }
+
+        // 加载历史记录
+        async function loadHistory() {
+            try {
+                const end = new Date().toISOString().split('T')[0];
+                const start = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+                const response = await fetch(`/api/history/range/${start}/${end}`);
+                const data = await response.json();
+                const history = data.history || [];
+                
+                if (history.length === 0) {
+                    document.getElementById('historyList').innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无历史记录</div>';
+                    return;
+                }
+                
+                document.getElementById('historyList').innerHTML = history.map(day => {
+                    const date = new Date(day.date);
+                    const dateStr = date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+                    const weekday = ['日', '一', '二', '三', '四', '五', '六'][date.getDay()];
+                    return `
+                        <div class="history-item">
+                            <div class="history-date">${dateStr} 周${weekday}</div>
+                            <div class="history-type">${day.dayType || '未知'}</div>
+                            <div class="history-progress">
+                                <div class="history-progress-bar ${day.isValidCheckin ? 'valid' : ''}" style="width: ${day.mainRate}%"></div>
+                            </div>
+                            <div class="history-rate" style="color: ${day.isValidCheckin ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                                ${Math.round(day.mainRate)}%
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('加载历史失败:', error);
+            }
+        }
+
+        // 显示提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
         // 初始化
+        initClock();
         loadData();
-        
-        // 每分钟刷新
-        setInterval(loadData, 60000);
+        setInterval(loadData, 5000);
     </script>
 </body>
 </html>
+
