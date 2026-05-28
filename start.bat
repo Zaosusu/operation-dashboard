@@ -24,4 +24,5 @@ if errorlevel 1 (
 echo Starting server...
 echo Local: http://localhost:5000
 start http://localhost:5000
+set FLASK_ENV=development
 python server.py

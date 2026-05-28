@@ -1190,22 +1190,32 @@
         }
 
         async function loadHistoryRange() {
-            const start = document.getElementById('historyStartDate').value;
-            const end = document.getElementById('historyEndDate').value;
-            
-            if (!start || !end) {
-                showToast('请选择日期范围', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/history/range/${start}/${end}`);
-                const data = await response.json();
-                renderHistoryList(data.history);
-            } catch (error) {
-                showToast('加载历史失败', 'error');
-            }
+        const singleDate = document.getElementById('historyDate').value;      // 左边
+        const start = document.getElementById('historyStartDate').value;    // 中间
+        const end = document.getElementById('historyEndDate').value;        // 右边
+        
+        let url;
+    
+        // 优先级：右边有值用右边，否则用左边
+        if (start && end) {
+            url = `/api/history/range/${start}/${end}`;
+        } else if (singleDate) {
+            // 单日期当成 range 的特殊情况（start=end）
+            url = `/api/history/range/${singleDate}/${singleDate}`;
+        } else {
+            showToast('请选择日期', 'error');
+            return;
         }
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            renderHistoryList(data.history);
+        } catch (error) {
+            showToast('加载历史失败', 'error');
+        }
+    }
+
 
         function renderHistoryList(history) {
             const container = document.getElementById('historyList');

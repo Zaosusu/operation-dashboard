@@ -26,12 +26,16 @@ DB_PATH = os.environ.get('DB_PATH', os.path.join(os.path.dirname(__file__), 'dat
 STATIC_PATH = os.path.dirname(__file__)
 ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', hashlib.sha256('admin123'.encode()).hexdigest())
 
-# 时区配置：北京时间 UTC+8
-BEIJING_OFFSET = timedelta(hours=8)
+# # 时区配置：北京时间 UTC+8
+# BEIJING_OFFSET = timedelta(hours=8)
 
 def now():
     """获取当前北京时间（无论服务器/本地时区如何，都正确）"""
     return datetime.now(ZoneInfo("Asia/Shanghai"))
+    return datetime.now(ZoneInfo("America/New_York"))
+
+    # """获取当前本地时间"""
+    # return datetime.now()  # 自动使用系统时区
 
 # 默认任务模板 - 首次运行时导入数据库（之后可编辑）
 DEFAULT_TASKS = [
@@ -59,12 +63,12 @@ DEFAULT_TASKS = [
     {"name": "真题套卷(2010后真题)", "category": "main", "weekdays": "4"},
     {"name": "Kimi语法", "category": "optional", "weekdays": "4"},
     {"name": "OGCP录音", "category": "optional", "weekdays": "4"},
-    # 周六 - 项目日
+    # 周六 - 假期
     {"name": "错题扫除(不学新课)", "category": "main", "weekdays": "5"},
     {"name": "OpenGuitar数据清洗", "category": "optional", "weekdays": "5"},
     {"name": "KimiCode托管", "category": "optional", "weekdays": "5"},
     {"name": "Godot摸鱼", "category": "optional", "weekdays": "5"},
-    # 周日 - 机动日
+    # 周日 - CS日
     {"name": "工作室之夜(非强制)", "category": "main", "weekdays": "6"},
     {"name": "彻底躺平、陪家人、出游", "category": "optional", "weekdays": "6"},
     {"name": "Godot摸鱼", "category": "optional", "weekdays": "6"},
@@ -73,12 +77,12 @@ DEFAULT_TASKS = [
 # 星期类型映射
 DAY_TYPES = {
     0: "数学日",
-    1: "CS日",
-    2: "英语日",
+    1: "英语日",
+    2: "CS日",
     3: "数学日",
     4: "英语实战",
-    5: "项目日",
-    6: "机动日"
+    5: "假期",
+    6: "CS日"
 }
 
 # 成就系统配置
@@ -881,15 +885,17 @@ def get_history_range(start_date, end_date):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    # 查询日期范围内所有已有的记录
     cursor.execute('''
         SELECT * FROM daily_stats 
         WHERE date >= ? AND date <= ?
         ORDER BY date DESC
     ''', (start_date, end_date))
     
-    history = []
+    # 将查询结果存入字典，方便查找
+    existing_records = {}
     for row in cursor.fetchall():
-        history.append({
+        existing_records[row['date']] = {
             "date": row['date'],
             "dayType": row['day_type'],
             "total": row['total_tasks'],
@@ -897,9 +903,37 @@ def get_history_range(start_date, end_date):
             "rate": row['completion_rate'],
             "mainRate": row['main_completed_rate'],
             "isValidCheckin": bool(row['is_valid_checkin'])
-        })
+        }
     
     conn.close()
+    
+    # 填充日期范围内所有日期，没有记录的显示为0%
+    history = []
+    current = end
+    while current >= start:
+        date_str = current.strftime('%Y-%m-%d')
+        weekday = current.weekday()
+        day_type = DAY_TYPES.get(weekday, "学习日")
+        
+        if date_str in existing_records:
+            history.append(existing_records[date_str])
+        else:
+            # 没有打卡记录，生成当日任务模板获取主线任务数
+            tasks, _ = generate_daily_tasks(date_str)
+            main_tasks = [t for t in tasks if t['category'] == 'main']
+            main_total = len(main_tasks)
+            
+            history.append({
+                "date": date_str,
+                "dayType": day_type,
+                "total": main_total,
+                "completed": 0,
+                "rate": 0.0,
+                "mainRate": 0.0,
+                "isValidCheckin": False
+            })
+        
+        current -= timedelta(days=1)
     
     return jsonify({
         "startDate": start_date,
